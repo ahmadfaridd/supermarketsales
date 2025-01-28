@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Load data
+# Memuat data(csv)
 data = pd.read_csv("supermarket_sales.csv")
 
-# Title and description
+# Judul dan deskripsi
 st.title("Supermarket Sales Dashboard")
 st.markdown("""
     **Dashboard ini membantu kamu menganalisis data penjualan supermarket.**
@@ -15,18 +15,18 @@ st.markdown("""
     - Visualisasi data seperti distribusi penjualan dan pendapatan
 """)
 
-# Sidebar for filters
+# Sidebar untuk filter
 st.sidebar.header("Filter Data")
 branch = st.sidebar.multiselect("Pilih Cabang:", options=data["Branch"].unique(), default=data["Branch"].unique())
 city = st.sidebar.multiselect("Pilih Kota:", options=data["City"].unique(), default=data["City"].unique())
 customer_type = st.sidebar.multiselect("Tipe Pelanggan:", options=data["Customer type"].unique(), default=data["Customer type"].unique())
 
-# Apply filters
+# Terapkan filter
 filtered_data = data[(data["Branch"].isin(branch)) &
                      (data["City"].isin(city)) &
                      (data["Customer type"].isin(customer_type))]
 
-# Show data
+# Tampilkan data
 tab1, tab2 = st.tabs(["Tabel Data", "Visualisasi"])
 
 with tab1:
@@ -35,7 +35,7 @@ with tab1:
 
 with tab2:
     st.subheader("Visualisasi")
-    # Distribution of Total Sales
+    # Distribusi Total Penjualan
     st.markdown("### Distribusi Total Penjualan")
     fig, ax = plt.subplots()
     filtered_data['Total'].hist(bins=30, ax=ax, color='skyblue', edgecolor='black')
@@ -44,7 +44,7 @@ with tab2:
     ax.set_ylabel("Frekuensi")
     st.pyplot(fig)
 
-    # Average Rating by Product Line
+    # Peringkat Rata-rata berdasarkan Lini Produk
     st.markdown("### Rata-rata Rating per Produk")
     avg_rating = filtered_data.groupby('Product line')['Rating'].mean().sort_values()
     fig, ax = plt.subplots()
