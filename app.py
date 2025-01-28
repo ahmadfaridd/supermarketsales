@@ -1,95 +1,58 @@
-# Streamlit Application generated from supermarket_sales.ipynb
 import streamlit as st
-
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
 
-# Load the dataset
-data = pd.read_csv('supermarket_sales.csv')
+# Load data
+data = pd.read_csv("supermarket_sales.csv")
 
-# Display the first few rows of the dataset
-print(data.head())
+# Title and description
+st.title("Supermarket Sales Dashboard")
+st.markdown("""
+    **Dashboard ini membantu kamu menganalisis data penjualan supermarket.**
+    
+    Fitur yang tersedia:
+    - Tabel data dengan opsi pencarian dan filter
+    - Visualisasi data seperti distribusi penjualan dan pendapatan
+""")
 
-## Exploratory Data Analysis (EDA)
-# Check for missing values
-print(data.isnull().sum())
+# Sidebar for filters
+st.sidebar.header("Filter Data")
+branch = st.sidebar.multiselect("Pilih Cabang:", options=data["Branch"].unique(), default=data["Branch"].unique())
+city = st.sidebar.multiselect("Pilih Kota:", options=data["City"].unique(), default=data["City"].unique())
+customer_type = st.sidebar.multiselect("Tipe Pelanggan:", options=data["Customer type"].unique(), default=data["Customer type"].unique())
 
-# Basic statistics of numerical features
-print(data.describe())
+# Apply filters
+filtered_data = data[(data["Branch"].isin(branch)) &
+                     (data["City"].isin(city)) &
+                     (data["Customer type"].isin(customer_type))]
 
-# Visualizing the distribution of 'Total' sales
-plt.figure(figsize=(10, 6))
-sns.histplot(data['Total'], bins=30, kde=True)
-plt.title('Distribution of Total Sales')
-plt.xlabel('Total Sales')
-plt.ylabel('Frequency')
-plt.show()
+# Show data
+tab1, tab2 = st.tabs(["Tabel Data", "Visualisasi"])
 
-# Countplot for 'Gender'
-plt.figure(figsize=(8, 5))
-sns.countplot(x='Gender', data=data)
-plt.title('Count of Customers by Gender')
-plt.show()
+with tab1:
+    st.subheader("Tabel Data")
+    st.dataframe(filtered_data)
 
-# Boxplot for 'Total' sales by 'Product line'
-plt.figure(figsize=(12, 6))
-sns.boxplot(x='Product line', y='Total', data=data)
-plt.title('Total Sales by Product Line')
-plt.xticks(rotation=45)
-plt.show()
+with tab2:
+    st.subheader("Visualisasi")
+    # Distribution of Total Sales
+    st.markdown("### Distribusi Total Penjualan")
+    fig, ax = plt.subplots()
+    filtered_data['Total'].hist(bins=30, ax=ax, color='skyblue', edgecolor='black')
+    ax.set_title("Distribusi Total Penjualan")
+    ax.set_xlabel("Total Penjualan")
+    ax.set_ylabel("Frekuensi")
+    st.pyplot(fig)
 
-## Data Preparation
-# Convert categorical variables to numeric using one-hot encoding
-data_encoded = pd.get_dummies(data, columns=['Branch', 'City', 'Customer type', 'Gender', 'Product line', 'Payment'], drop_first=True)
+    # Average Rating by Product Line
+    st.markdown("### Rata-rata Rating per Produk")
+    avg_rating = filtered_data.groupby('Product line')['Rating'].mean().sort_values()
+    fig, ax = plt.subplots()
+    avg_rating.plot(kind='barh', ax=ax, color='salmon', edgecolor='black')
+    ax.set_title("Rata-rata Rating per Produk")
+    ax.set_xlabel("Rating")
+    ax.set_ylabel("Kategori Produk")
+    st.pyplot(fig)
 
-# Define features and target variable for classification
-X = data_encoded.drop(['Invoice ID', 'Date', 'Time', 'Total'], axis=1)
-y = (data['Total'] > data['Total'].mean()).astype(int)  # Binary classification: above or below average total sales
-
-# Split the dataset into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-## Modeling without Data Preparation (using raw data)
-# Using Random Forest Classifier without any preparation (just for demonstration)
-model_raw = RandomForestClassifier(random_state=42)
-model_raw.fit(X_train, y_train)
-
-# Predictions and evaluation
-y_pred_raw = model_raw.predict(X_test)
-print("Classification Report (Raw Data):")
-print(classification_report(y_test, y_pred_raw))
-print("Confusion Matrix (Raw Data):")
-print(confusion_matrix(y_test, y_pred_raw))
-
-## Modeling with Data Preparation (using prepared data)
-model_prepared = RandomForestClassifier(random_state=42)
-model_prepared.fit(X_train, y_train)
-
-# Predictions and evaluation
-y_pred_prepared = model_prepared.predict(X_test)
-print("Classification Report (Prepared Data):")
-print(classification_report(y_test, y_pred_prepared))
-print("Confusion Matrix (Prepared Data):")
-print(confusion_matrix(y_test, y_pred_prepared))
-
-# Data correlation analysis
-# Convert categorical variables to numeric using one-hot encoding
-data_encoded = pd.get_dummies(data, columns=['Branch', 'City', 'Customer type', 'Gender', 'Product line', 'Payment'], drop_first=True)
-
-# Data correlation analysis
-# Convert categorical variables to numeric using one-hot encoding
-data_encoded = pd.get_dummies(data, columns=['Branch', 'City', 'Customer type', 'Gender', 'Product line', 'Payment'], drop_first=True)
-
-numerical_data = data_encoded.select_dtypes(include=['number'])  # Select only numerical columns
-correlation_matrix = numerical_data.drop(columns=['Invoice ID', 'Date'], errors='ignore').corr()  # errors='ignore' to handle if columns are already dropped
-
-# Set up the matplotlib figure
-plt.figure(figsize=(12, 8))
-
-# Draw the heatmap with the mask and correct aspect ratio
-sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, cbar_kws={"shrink": .8})
-
+st.sidebar.markdown("---")
+st.sidebar.write(f"Jumlah data setelah filter: {len(filtered_data)} dari {len(data)} total data.")
