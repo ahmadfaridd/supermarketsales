@@ -17,14 +17,14 @@ st.markdown("""
 
 # Sidebar untuk filter
 st.sidebar.header("Filter Data")
-branch = st.sidebar.multiselect("Pilih Cabang:", options=data["Branch"].unique(), default=data["Branch"].unique())
 city = st.sidebar.multiselect("Pilih Kota:", options=data["City"].unique(), default=data["City"].unique())
 customer_type = st.sidebar.multiselect("Tipe Pelanggan:", options=data["Customer type"].unique(), default=data["Customer type"].unique())
+gender = st.sidebar.multiselect("Pilih Jenis Kelamin:", options=data["Gender"].unique(), default=data["Gender"].unique())
 
 # Terapkan filter
-filtered_data = data[(data["Branch"].isin(branch)) &
-                     (data["City"].isin(city)) &
-                     (data["Customer type"].isin(customer_type))]
+filtered_data = data[(data["City"].isin(city)) &
+                     (data["Customer type"].isin(customer_type)) &
+                     (data["Gender"].isin(gender)) ]
 
 # Tampilkan data
 tab1, tab2 = st.tabs(["Tabel Data", "Visualisasi"])
